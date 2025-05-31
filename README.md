@@ -19,12 +19,7 @@
 
 ## Video Demonstration
 
-**(Coming Soon! Watch this space for a live demo of the Document AI Assistant in action.)**
-
-<p align="center">
-<!-- Placeholder: Add your video link below when ready -->
-<i>Link to Video Demo Placeholder - To be updated</i>
-</p>
+[![Watch the demo](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg)](https://youtu.be/BFKm1yChJDs)
 
 ---
 
