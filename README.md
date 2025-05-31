@@ -62,10 +62,8 @@ The Document AI Assistant can be run as a Streamlit application or used programm
 
 ### Running the Streamlit Application
 
-*(Instructions for running the main Streamlit app will be added here once `app.py` or the main script is defined. For example:)*
-
 ```bash
-streamlit run app.py
+streamlit run main.py
 ```
 
 ### Programmatic Usage of Agents
