@@ -2,18 +2,18 @@
 
 **Intelligent Document Analysis and Processing with Streamlit, LangChain, and Ollama**
 
-**Document AI Assistant** is a powerful and intuitive Streamlit application designed for intelligent document analysis. It seamlessly processes various file formats, including PDFs, JSON files, and email messages (`.eml`). By leveraging cutting-edge language models through **LangChain** and **Ollama LLMs**, this tool excels at structured information extraction, content validation, and insightful summarization. Its modular architecture ensures a robust and extensible platform for automating document workflows with minimal setup.
+**Document AI Assistant** is a powerful and intuitive Streamlit application designed for intelligent document analysis. It seamlessly processes various file formats, including PDFs, JSON files, and emails.
 
 ---
 
 ## Key Features
 
-* 📧 **Email Agent:** Automatically extracts structured metadata from `.eml` files, identifying sender, recipient, subject, message intent, and urgency.
-* 📄 **PDF Agent:** Delivers concise summaries and extracts key information, insights, and data points from PDF documents.
-* 📋 **JSON Agent:** Validates JSON data structures, parses content, and intelligently flags anomalies or inconsistencies.
-* 🧠 **In-Memory Storage:** Utilizes a centralized memory system for storing intermediate results, enabling efficient task chaining and seamless downstream operations.
-* 🧩 **Extensible Architecture:** Designed with a plug-and-play pattern, allowing for the easy addition of new document types or custom processing agents.
-* 🖥️ **User-Friendly Interface:** Built with Streamlit for an interactive and easy-to-navigate user experience.
+* **Email Agent:** Automatically extracts structured metadata from `.eml` files, identifying sender, recipient, subject, message intent, and urgency.
+* **PDF Agent:** Delivers concise summaries and extracts key information, insights, and data points from PDF documents.
+* **JSON Agent:** Validates JSON data structures, parses content, and intelligently flags anomalies or inconsistencies.
+* **In-Memory Storage:** Utilizes a centralized memory system for storing intermediate results, enabling efficient task chaining and seamless downstream operations.
+* **Extensible Architecture:** Designed with a plug-and-play pattern, allowing for the easy addition of new document types or custom processing agents.
+* **User-Friendly Interface:** Built with Streamlit for an interactive and easy-to-navigate user experience.
 
 ---
 
@@ -70,7 +70,7 @@ streamlit run main.py
 
 Examples of using the individual agents:
 
-#### 📧 Email Processing
+#### Email Processing
 
 ```python
 from agents.load_email import email_agent
@@ -84,7 +84,7 @@ except Exception as e:
     print(f"An error occurred during email processing: {e}")
 ```
 
-#### 📄 PDF Processing
+#### PDF Processing
 
 ```python
 from agents.load_pdf import pdf_agent
@@ -98,7 +98,7 @@ except Exception as e:
     print(f"An error occurred during PDF processing: {e}")
 ```
 
-#### 📋 JSON Validation
+#### JSON Validation
 
 ```python
 from agents.load_json import json_agent
@@ -137,7 +137,7 @@ GenAI/
 ├── .gitignore             # Specifies intentionally untracked files
 ├── requirements.txt       # Project dependencies
 ├── README.md              # This documentation file
-└── app.py                 # Main Streamlit application script (if applicable)
+└── main.py                 # Main Streamlit application script (if applicable)
 ```
 
 ---
@@ -207,37 +207,16 @@ See `requirements.txt` for a complete list of dependencies.
 
 ---
 
-## License
+### License
 
-This project is licensed under the **MIT License**. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.
-*(Make sure to update the link or add a valid license file.)*
-
----
-
-## Author
-
-**Surriya Gokul**
-GitHub: [@SurriyaGokul](https://github.com/SurriyaGokul)
-*(Consider adding a LinkedIn or professional profile.)*
+This project is licensed under the **MIT License**. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.  
 
 ---
 
-## Contributing
+### Author
 
-Contributions are what make the open-source community so amazing. Any contributions you make are **greatly appreciated**!
-
-If you have a suggestion to improve this project, feel free to fork the repo and create a pull request. You can also open an issue with the tag "enhancement". Don’t forget to ⭐ the project!
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a pull request
-
+**Surriya Gokul**  
+GitHub: [@SurriyaGokul](https://github.com/SurriyaGokul)  
 ---
 
-> **Important Note:** Ensure that the necessary Ollama models (e.g., Llama 3, Mistral) are downloaded and running locally for the `ChatOllama` integration to function correctly. You can manage models using the Ollama CLI (e.g., `ollama list`, `ollama pull <model_name>`).
-
----
-
-Let me know if you'd like this converted to a `.md` file, or if you want a badge section, contributors’ list, or changelog added.
+> **Important Note:** Ensure that the necessary Ollama models (e.g., Llama 3, Mistral) are downloaded and running locally for the `ChatOllama` integration to function correctly. You can manage models using the Ollama CLI.
