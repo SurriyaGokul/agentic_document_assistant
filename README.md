@@ -119,8 +119,7 @@ except Exception as e:
 ```
 GenAI/
 │
-├── agents/                # Core processing agents for different document types
-│   ├── __init__.py
+├── agents/                # Core processing agents for different document type
 │   ├── load_email.py      # Agent for .eml file processing
 │   ├── load_pdf.py        # Agent for .pdf file processing
 │   └── load_json.py       # Agent for .json file validation and parsing
@@ -186,10 +185,7 @@ The modular design allows easy extension for new document formats or tasks.
 3. **Use Shared Memory (Optional):**
    Integrate with `InMemorySharedMemory` for context sharing.
 
-4. **Update `__init__.py` (Optional):**
-   For easier imports.
-
-5. **Streamlit UI Integration (Optional):**
+4. **Streamlit UI Integration (Optional):**
    Add UI elements for the new agent if needed.
 
 ---
