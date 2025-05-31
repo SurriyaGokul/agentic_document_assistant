@@ -18,9 +18,7 @@
 ---
 
 ## Video Demonstration
-[▶️ Watch the demo video](Intern Assignment.mp4)
-
-
+[▶️ Watch the demo video](https://youtu.be/BFKm1yChJDs)
 ---
 
 ## Installation
