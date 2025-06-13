@@ -1,4 +1,4 @@
-# Document AI Assistant
+# AI Document Assistant
 
 **Intelligent Document Analysis and Processing with Streamlit, LangChain, and Ollama**
 
