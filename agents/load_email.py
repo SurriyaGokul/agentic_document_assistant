@@ -8,9 +8,12 @@ import json
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from memory.memory_store import InMemorySharedMemory
+from memory.memory_store import LRUCacheTTL
 
-def email_agent(file_path: str, thread_id: str = "default"):
+# Defining the Cache Memory
+cached_memory = LRUCacheTTL(max_size=1000, ttl_seconds=3600)
+
+def email_agent(file_path: str):
     """
     Processes an email file to extract structured information using a language model.
     """
@@ -43,28 +46,33 @@ def email_agent(file_path: str, thread_id: str = "default"):
     # Run the LLM
     llm = ChatOllama(model="llama3.1:8b", temperature=0.1)
     formatted_prompt = prompt.format(context=email_text)
-    response = llm.invoke(formatted_prompt)
+    input_key = hash(formatted_prompt)
+    cached_data = cached_memory.get(input_key)
 
-    # Extract content from the AIMessage object
-    response_text = response.content if hasattr(response, 'content') else str(response)
+    if cached_data:
+        response_text = cached_data
+        try:
+            parsed = json.loads(response_text)
+        except json.JSONDecodeError:
+            parsed = {"sender": None, "intent": None, "urgency": None}
+    else:
+        response = llm.invoke(formatted_prompt)
+        response_text = response.content if hasattr(response, 'content') else str(response)
+
+        try:
+            parsed = json.loads(response_text)
+        except json.JSONDecodeError:
+            parsed = {"sender": None, "intent": None, "urgency": None}
+
+        # Save to memory
+        cached_memory.save(input_key, {
+            "source": file_path,
+            "type": "email",
+            "values": email_text,
+            "sender": parsed.get("sender"),
+            "intent": parsed.get("intent"),
+            "urgency": parsed.get("urgency")
+        })
 
     print(f"LLM Response: {response_text}")
-
-    # Parse the LLM response
-    try:
-        parsed = json.loads(response_text)
-    except json.JSONDecodeError:
-        parsed = {"sender": None, "intent": None, "urgency": None}
-
-    # Save to memory
-    shared_memory = InMemorySharedMemory()
-    shared_memory.save(thread_id, {
-        "source": file_path,
-        "type": "email",
-        "values": email_text,
-        "sender": parsed.get("sender"),
-        "intent": parsed.get("intent"),
-        "urgency": parsed.get("urgency")
-    })
-
     return parsed 

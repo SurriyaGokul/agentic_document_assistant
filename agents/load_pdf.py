@@ -5,18 +5,18 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 import json
 import os
 import sys
+import re
 
-# Add the parent directory of 'memory' to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from memory.memory_store import InMemorySharedMemory
+from memory.memory_store import LRUCacheTTL  
 
+cache = LRUCacheTTL(max_size=1000, ttl_seconds=3600)
 
 def extract_json(text):
     """Attempt to extract valid JSON object from a string response."""
     try:
         return json.loads(text)
     except:
-        import re
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
             try:
@@ -26,10 +26,10 @@ def extract_json(text):
     return {"summary": "No summary available", "key_information": []}
 
 
-def pdf_agent(file_path: str, thread_id: str = "default") -> list:
+def pdf_agent(file_path: str) -> dict:
     """
     Processes a PDF file, extracts chunks, summarizes each using LLM, 
-    and stores content in shared memory.
+    and caches results with LRU + TTL logic.
     """
     loader = PyPDFLoader(file_path)
     documents = loader.load()
@@ -37,50 +37,47 @@ def pdf_agent(file_path: str, thread_id: str = "default") -> list:
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=100)
     chunks = text_splitter.split_documents(documents)
 
-    prompt = """
-            You are a helpful assistant that extracts structured information from PDF documents.
+    prompt_template = PromptTemplate(
+        input_variables=["context"],
+        template="""
+        You are a helpful assistant that extracts structured information from PDF documents.
 
-            Given this PDF content:
-            ---
-            {context}
-            ---
+        Given this PDF content:
+        ---
+        {context}
+        ---
 
-            Generate a summary of the document content and extract key information.
-            Return the summary as a JSON object with the following fields:
-            - summary (string): A brief summary of the document.
-            - key_information (list): A list of key points or information extracted from the document.
+        Generate a summary of the document content and extract key information.
+        Return the summary as a JSON object with the following fields:
+        - summary (string): A brief summary of the document.
+        - key_information (list): A list of key points or information extracted from the document.
 
-            Ensure the output is a valid JSON object. Do not include any extra explanation or commentary.
+        Ensure the output is a valid JSON object. Do not include any extra explanation or commentary.
         """
+    )
 
     print("Initializing LLM with model: llama3.1:8b")
+
     llm = ChatOllama(model="llama3.1:8b", temperature=0)
-    prompt = PromptTemplate(
-        input_variables=["context"],
-        template=prompt)
 
     summaries = []
     for chunk in chunks:
         context = chunk.page_content
+        input_key = hash(context)
+
         print(f"Processing chunk of size {len(context)} characters")
-        response = llm.invoke(prompt.format(context=context))
-        if hasattr(response, 'content'):
-            response_text = response.content
-        else:
-            response_text = str(response)
 
-        result = extract_json(response_text)
-        summaries.append(result)
+        cached_result = cache.get(input_key)
+        if cached_result:
+            summaries.append(cached_result)
+            continue
 
-    shared_memory = InMemorySharedMemory()
+        response = llm.invoke(prompt_template.format(context=context))
+        response_text = response.content if hasattr(response, 'content') else str(response)
+        parsed_result = extract_json(response_text)
 
-    for doc in documents:
-        entry = {
-            "source": file_path,
-            "type": "pdf",
-            "values": doc.page_content
-        }
-        shared_memory.save(thread_id, entry)
+        cache.put(input_key, parsed_result)
+        summaries.append(parsed_result)
 
     merged_summary = {
         "summary": " ".join(item["summary"] for item in summaries if "summary" in item),
@@ -88,5 +85,3 @@ def pdf_agent(file_path: str, thread_id: str = "default") -> list:
     }
 
     return merged_summary
-
-

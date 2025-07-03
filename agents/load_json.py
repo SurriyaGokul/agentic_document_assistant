@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import JSONLoader
 from langchain_core.tools import tool
-from memory.memory_store import InMemorySharedMemory
+from memory.memory_store import LRUCacheTTL 
 import json
 
 def validate_document(doc: dict) -> list:
@@ -10,29 +10,30 @@ def validate_document(doc: dict) -> list:
             errors.append(f"Field '{key}' is empty or invalid")
     return errors
 
+cache = LRUCacheTTL(max_size=1000, ttl_seconds=3600)
 
-shared_memory = InMemorySharedMemory()
-
-
-def json_agent(file_path: str, thread_id: str = "default") -> list:
+def json_agent(file_path: str) -> list:
     """
-    Processes a JSON file, validates its content, and saves the results to shared memory.
-
-    Args:
-        file_path (str): The path to the JSON file to be loaded and processed.
-        thread_id (str, optional): The identifier for the thread in shared memory. Defaults to "default".
+    Processes a JSON file, validates its content, and caches the results using LRU + TTL.
 
     Returns:
-        list: A list containing a dictionary with the processed JSON content, its type, 
-              any validation anomalies, and the source. If a JSON decoding error occurs, 
-              returns a list with an error dictionary containing the error message.
+        list: A list with a dict containing structured result or error message.
     """
+
     print("Processing JSON file:", file_path)
-    loader = JSONLoader(file_path=file_path, jq_schema=".", text_content=False)  # Set text_content=False
+
+    loader = JSONLoader(file_path=file_path, jq_schema=".", text_content=False)
     documents = loader.load()
+
     try:
         for doc in documents:
-            reformatted = json.loads(doc.page_content)  # Parse page_content into a dictionary
+            reformatted = json.loads(doc.page_content)
+            input_key = hash(json.dumps(reformatted, sort_keys=True))  
+
+            cached_result = cache.get(input_key)
+            if cached_result:
+                return [cached_result]
+            
             anomalies = validate_document(reformatted)
             result = {
                 "source": file_path,
@@ -40,8 +41,9 @@ def json_agent(file_path: str, thread_id: str = "default") -> list:
                 "values": reformatted,
                 "anomalies": anomalies
             }
-            shared_memory.save(thread_id, result)
+
+            cache.put(input_key, result)
             return [result]
+
     except json.JSONDecodeError as e:
         return [{"source": file_path, "type": "json", "error": str(e)}]
-

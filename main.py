@@ -4,26 +4,15 @@ from langchain_core.tools import Tool
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_core.prompts import PromptTemplate
 from langchain.tools.render import render_text_description
-from langchain_community.document_loaders import PyPDFLoader
 from agents.load_json import json_agent
 from agents.load_pdf import pdf_agent
 from agents.load_email import email_agent
-from memory.memory_store import InMemorySharedMemory
+from memory.memory_store import LRUCacheTTL
 import tempfile
 import os
 
 # Shared memory object
-memory = InMemorySharedMemory()
-
-# Document reader
-# def read_file(file_path: str) -> str:
-#     if file_path.endswith(".pdf"):
-#         loader = PyPDFLoader(file_path)
-#         pages = loader.load()
-#         return "\n".join(page.page_content for page in pages)
-#     else:
-#         with open(file_path, 'r', encoding='utf-8') as f:
-#             return f.read()
+cached_memory = LRUCacheTTL(max_size=1000, ttl_seconds=3600)
 
 # Prompt template for ReAct agent
 REACT_PROMPT_TEMPLATE = """
@@ -49,15 +38,15 @@ Thought: {agent_scratchpad}
 """
 
 # Agent executor logic
-def run_agent(file_path: str, thread_id: str = "default", initial_content: str = None) -> dict:
+def run_agent(file_path: str, initial_content: str = None) -> dict:
     if initial_content is None:
         content = file_path
     else:
         content = initial_content
     tools = [
-        Tool(name="pdf_agent", func=lambda x: pdf_agent(x, thread_id), description="Use this tool to process content from PDF documents. Input should be the full text content of the PDF."),
-        Tool(name="json_agent", func=lambda x: json_agent(x, thread_id), description="Use this tool to process content from JSON documents or data. Input should be the JSON string."),
-        Tool(name="email_agent", func=lambda x: email_agent(x, thread_id), description="Use this tool to process content from Email documents. Input should be the full text content of the email.")
+        Tool(name="pdf_agent", func=lambda x: pdf_agent(x), description="Use this tool to process content from PDF documents. Input should be the full file path."),
+        Tool(name="json_agent", func=lambda x: json_agent(x), description="Use this tool to process content from JSON documents or data. Input should be the full file path."),
+        Tool(name="email_agent", func=lambda x: email_agent(x), description="Use this tool to process content from Email documents. Input should be the full file path.")
     ]
 
     prompt = PromptTemplate(
@@ -78,13 +67,12 @@ def run_agent(file_path: str, thread_id: str = "default", initial_content: str =
         verbose=True,
         handle_parsing_errors=True
     )
-
-    try:
-        result = executor.invoke({"input": content})
-    except Exception as e:
-        return {"error": f"Agent failed: {str(e)}"}
-
-    memory.save(thread_id, {"source": file_path, "result": result})
+    cached_data = cached_memory.get(hash(file_path))
+    if cached_data:
+        return cached_data["result"]
+    else:
+        result = executor.invoke({"input":content})
+        cached_memory.put(hash(file_path),{"result": result})
     return result
 
 # --- Streamlit UI ---
@@ -100,11 +88,10 @@ if uploaded_file:
         tmp_file.write(uploaded_file.read())
         file_path = tmp_file.name
 
-    thread_id = st.text_input("Thread ID", value="default")
 
     if st.button("Analyze Document"):
         with st.spinner("Processing..."):
-            result = run_agent(file_path, thread_id)
+            result = run_agent(file_path)
 
         if "error" in result:
             st.error(result["error"])
@@ -113,5 +100,8 @@ if uploaded_file:
             st.subheader("Final Answer:")
             st.json(result.get("output", result))
 
-            st.subheader("Memory Log")
-            st.json(memory.get(thread_id))
+            cached = cached_memory.get(hash(file_path))
+            if cached:
+                st.subheader("Memory Log")
+                st.json(cached["result"])
+
