@@ -1,211 +1,162 @@
-# AI Document Assistant
+# 🧠 AI Document Assistant
 
-**Intelligent Document Analysis and Processing with Streamlit, LangChain, and Ollama**
+**Multimodal Document Intelligence with Streamlit, LangChain, Ollama, and RAG**
 
-**Document AI Assistant** is a powerful and intuitive Streamlit application designed for intelligent document analysis. It seamlessly processes various file formats, including PDFs, JSON files, and emails.
-
----
-
-## Key Features
-
-* **Email Agent:** Automatically extracts structured metadata from `.eml` files, identifying sender, recipient, subject, message intent, and urgency.
-* **PDF Agent:** Delivers concise summaries and extracts key information, insights, and data points from PDF documents.
-* **JSON Agent:** Validates JSON data structures, parses content, and intelligently flags anomalies or inconsistencies.
-* **In-Memory Storage:** Utilizes a centralized memory system for storing intermediate results, enabling efficient task chaining and seamless downstream operations.
-* **Extensible Architecture:** Designed with a plug-and-play pattern, allowing for the easy addition of new document types or custom processing agents.
-* **User-Friendly Interface:** Built with Streamlit for an interactive and easy-to-navigate user experience.
+The **AI Document Assistant** is a smart, modular document understanding system that processes PDFs, JSON files, and emails using Large Language Models (LLMs). It integrates **ReAct-style agents**, **local LLMs via Ollama**, **RAG pipelines**, **caching with TTL**, and a user-friendly **Streamlit interface** — all optimized for performance and extensibility.
 
 ---
 
-## Video Demonstration
-[▶️ Watch the demo video](https://youtu.be/BFKm1yChJDs)
----
+## 🚀 Key Features
 
-## Installation
-
-Setting up the Document AI Assistant is straightforward. Follow these steps:
-
-1. **Clone the Repository:**
-
-   ```bash
-   git clone https://github.com/SurriyaGokul/GenAI.git
-   cd GenAI
-   ```
-
-2. **Install Dependencies:**
-   Ensure you have Python 3.8 or higher installed. Then, install the required packages:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   *(It’s recommended to use a virtual environment.)*
-
-3. **Ollama Setup:**
-   This project relies on Ollama for local LLM execution.
-
-   * Install [Ollama](https://ollama.com/)
-   * Pull the necessary models (e.g., `ollama pull llama3`). Refer to LangChain documentation for model compatibility.
+- 🔍 **ReAct Agent Routing:** Dynamically routes documents to the best-suited tool using reasoning steps.
+- 📧 **Email Agent:** Extracts structured data (Sender, Intent, Urgency) from `.eml` files.
+- 📄 **PDF Agent:** Summarizes documents and highlights key points from PDF chunks.
+- 📦 **JSON Agent:** Validates structure, parses fields, and flags anomalies in JSON.
+- 🧠 **RAG-Enabled Chat:** Supports Retrieval-Augmented Generation using FAISS-based vector search on document chunks.
+- ⚡ **LRU + TTL Caching:** Avoids redundant LLM calls with an in-memory cache that uses Least Recently Used logic and Time-To-Live expiry.
+- 💬 **Chat Memory:** Persists user queries and responses across sessions for contextual continuity.
+- 🖼️ **Streamlit UI:** Upload and interact with documents in a polished web interface.
+- 🧩 **Plug-and-Play Tools:** Add new document types or processing modules easily.
 
 ---
+## 📽️ Demo
 
-## Usage
+### 🔍 RAG Chat Interface
+![RAG Demo](assets/rag.png)
 
-The Document AI Assistant can be run as a Streamlit application or used programmatically through its agents.
+### 📝 Summarization Flow
+![Summarise Demo](assets/summarise.png)
+---
 
-### Running the Streamlit Application
+## 🛠️ Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/SurriyaGokul/GenAI.git
+cd GenAI
+````
+
+### 2. Install Python Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Install and Setup Ollama
+
+Download and install [Ollama](https://ollama.com/), then pull the required models:
+
+```bash
+ollama pull llama3
+ollama pull nomic-embed-text
+```
+
+---
+
+## 💡 How to Use
+
+### 🔘 Launch the Web Interface
 
 ```bash
 streamlit run main.py
 ```
 
-### Programmatic Usage of Agents
+Upload your `.pdf`, `.json`, `.txt`, or `.eml` file to start analysis.
 
-Examples of using the individual agents:
+---
 
-#### Email Processing
+### 🧠 Using Agents Programmatically
 
 ```python
 from agents.load_email import email_agent
-
-try:
-    result = email_agent("path/to/your/email.eml")
-    print(result)
-except FileNotFoundError:
-    print("Error: Email file not found. Please check the path.")
-except Exception as e:
-    print(f"An error occurred during email processing: {e}")
-```
-
-#### PDF Processing
-
-```python
 from agents.load_pdf import pdf_agent
-
-try:
-    summary = pdf_agent("path/to/your/document.pdf")
-    print(summary)
-except FileNotFoundError:
-    print("Error: PDF file not found. Please check the path.")
-except Exception as e:
-    print(f"An error occurred during PDF processing: {e}")
-```
-
-#### JSON Validation
-
-```python
 from agents.load_json import json_agent
 
-try:
-    results = json_agent("path/to/your/data.json")
-    print(results)
-except FileNotFoundError:
-    print("Error: JSON file not found. Please check the path.")
-except Exception as e:
-    print(f"An error occurred during JSON processing: {e}")
+print(email_agent("test.eml"))
+print(pdf_agent("report.pdf"))
+print(json_agent("data.json"))
 ```
 
 ---
 
-## Project Structure
+## 🧠 Retrieval-Augmented Generation (RAG)
+
+Upload a document, and the system builds a FAISS vector index from its contents. You can then ask natural language questions that retrieve relevant chunks + LLM reasoning.
+
+* Powered by `RecursiveCharacterTextSplitter`, `OllamaEmbeddings`, and `FAISS`.
+* Vectorstore is cached locally for performance.
+
+---
+
+## 🗂️ Project Structure
 
 ```
 GenAI/
 │
-├── agents/                # Core processing agents for different document type
-│   ├── load_email.py      # Agent for .eml file processing
-│   ├── load_pdf.py        # Agent for .pdf file processing
-│   └── load_json.py       # Agent for .json file validation and parsing
+├── agents/
+│   ├── load_email.py       # Email extraction agent
+│   ├── load_pdf.py         # PDF summarization agent
+│   ├── load_json.py        # JSON validation agent
+│   └── rag_chat.py         # RAG builder and Q&A logic
 │
-├── memory/                # In-memory storage system
-│   ├── __init__.py
-│   └── memory_store.py    # Shared memory implementation
+├── memory/
+│   └── memory_store.py     # LRUCacheTTL implementation
 │
-├── test_files/            # Sample input files for testing and demonstration
-│   ├── sample.eml
-│   ├── sample.pdf
-│   └── sample.json
-│
-├── .gitignore             # Specifies intentionally untracked files
-├── requirements.txt       # Project dependencies
-├── README.md              # This documentation file
-└── main.py                 # Main Streamlit application script (if applicable)
+├── test_files/             # Sample documents
+├── main.py                 # Streamlit app entry point
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## How It Works
+## 🧩 Add a New Agent
 
-The Document AI Assistant operates through a synergistic combination of specialized agents and core backend technologies:
+1. **Create an agent** in `agents/load_yourtype.py`
+2. Implement:
 
-* **Agents:**
-  Each agent (`load_email.py`, `load_pdf.py`, `load_json.py`) is tailored for a specific document type and handles:
-
-  * File Ingestion: Loading and parsing the input file.
-  * Preprocessing: Preparing data for the language model.
-  * Prompt Engineering: Constructing effective prompts for the LLM.
-  * LLM Interaction: Communicating with the LLM via LangChain.
-  * Result Storage: Storing processed information in the shared memory module.
-
-* **LangChain + Ollama:**
-  This powerful duo forms the core of the AI capabilities.
-
-  * **LangChain:** Provides tools for model interaction, chaining, and prompt management.
-  * **Ollama:** Runs open-source language models (like Llama 3, Mistral) locally, ensuring privacy and control.
-
-* **Shared Memory (`memory_store.py`):**
-  A lightweight key-value in-memory store that enables:
-
-  * Caching: Avoiding redundant LLM calls.
-  * Inter-Agent Communication: Sharing context between different parts of the system.
+   * Document parsing
+   * Prompt generation
+   * LLM inference
+   * JSON output
+3. Register the agent in `main.py`’s tool list.
 
 ---
 
-## Adding New Agents
+## 🧠 Behind the Scenes
 
-The modular design allows easy extension for new document formats or tasks.
-
-1. **Create Agent File:**
-   Add a new Python file in the `agents/` directory (e.g., `load_docx.py`).
-
-2. **Implement Agent Logic:**
-
-   * Define loading and parsing functions.
-   * Preprocess the document.
-   * Design prompts tailored for your task.
-   * Parse and return structured results.
-
-3. **Use Shared Memory (Optional):**
-   Integrate with `InMemorySharedMemory` for context sharing.
-
-4. **Streamlit UI Integration (Optional):**
-   Add UI elements for the new agent if needed.
+| Component       | Role                                                            |
+| --------------- | --------------------------------------------------------------- |
+| **LangChain**   | LLM abstraction, prompt chaining, ReAct agent architecture      |
+| **Ollama**      | Local model runner (e.g., Llama3, Gemma, Nomic Embeddings)      |
+| **Streamlit**   | Web interface for upload, interaction, and visualization        |
+| **RAG (FAISS)** | Retrieves relevant chunks for questions using dense embeddings  |
+| **LRUCacheTTL** | Saves compute by avoiding duplicate LLM calls with TTL eviction |
 
 ---
 
-## Requirements
+## ✅ Requirements
 
-* **Python:** 3.8 or higher
-* **Core Libraries:**
+* Python 3.8+
+* Ollama (local LLMs)
+* Streamlit, LangChain, FAISS, PyPDF, etc.
 
-  * [Streamlit](https://streamlit.io/): For the web UI.
-  * [LangChain](https://python.langchain.com/): For LLM orchestration.
-  * [Ollama](https://ollama.com/): For local LLM execution.
-
-See `requirements.txt` for a complete list of dependencies.
+See `requirements.txt` for full list.
 
 ---
 
-### License
+## 📄 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.  
+Licensed under the **MIT License**. See [`LICENSE`](https://opensource.org/licenses/MIT) for details.
 
 ---
 
-### Author
+## 👤 Author
 
-**Surriya Gokul**  
-GitHub: [@SurriyaGokul](https://github.com/SurriyaGokul)  
----
+**Surriya Gokul**
+GitHub: [@SurriyaGokul](https://github.com/SurriyaGokul)
 
-> **Important Note:** Ensure that the necessary Ollama models (e.g., Llama 3, Mistral) are downloaded and running locally for the `ChatOllama` integration to function correctly. You can manage models using the Ollama CLI.
+> *Push the limits of document intelligence — locally, privately, and powerfully.*
+
+
