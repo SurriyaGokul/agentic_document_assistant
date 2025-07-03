@@ -65,7 +65,7 @@ def email_agent(file_path: str):
             parsed = {"sender": None, "intent": None, "urgency": None}
 
         # Save to memory
-        cached_memory.save(input_key, {
+        cached_memory.put(input_key, {
             "source": file_path,
             "type": "email",
             "values": email_text,
