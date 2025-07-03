@@ -1,4 +1,4 @@
-# Document AI Assistant
+# AI Document Assistant
 
 **Intelligent Document Analysis and Processing with Streamlit, LangChain, and Ollama**
 
@@ -18,9 +18,7 @@
 ---
 
 ## Video Demonstration
-
-
-
+[▶️ Watch the demo video](https://youtu.be/BFKm1yChJDs)
 ---
 
 ## Installation
