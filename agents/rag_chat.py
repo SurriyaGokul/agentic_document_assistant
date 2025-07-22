@@ -13,6 +13,16 @@ def get_file_hash(file_path):
         return hashlib.sha256(f.read()).hexdigest()
 
 def build_vectorstore(file_path):
+    file_hash = get_file_hash(file_path)
+    cache_dir = "./vector_cache"
+    os.makedirs(cache_dir, exist_ok=True)
+
+    index_path = os.path.join(cache_dir, file_hash)
+    
+    if os.path.exists(index_path):
+        return FAISS.load_local(index_path, embeddings=OllamaEmbeddings(model="nomic-embed-text"))
+
+    # Else build from scratch
     loader = PyPDFLoader(file_path)
     documents = loader.load()
 
@@ -21,10 +31,12 @@ def build_vectorstore(file_path):
 
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
     vectorstore = FAISS.from_documents(chunks, embeddings)
+    vectorstore.save_local(index_path)
+    
     return vectorstore
 
+
 def get_rag_chain(file_path):
-    file_hash = get_file_hash(file_path)
     vectorstore = build_vectorstore(file_path)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
